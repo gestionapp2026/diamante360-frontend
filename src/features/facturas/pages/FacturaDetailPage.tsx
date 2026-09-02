@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, FileDown, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import {
   useAnularFactura,
   useDependenciasFactura,
+  useDescargarFacturaPdf,
   useEliminarFactura,
   useFactura,
   useHistorialFactura,
@@ -144,6 +145,7 @@ export function FacturaDetailPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const anularFactura = useAnularFactura(facturaId);
   const eliminarFactura = useEliminarFactura(facturaId);
+  const descargarPdf = useDescargarFacturaPdf();
 
   if (isLoading || !factura) {
     return (
@@ -164,6 +166,14 @@ export function FacturaDetailPage() {
         description={`${factura.clienteNombre} · ${documentoTexto}`}
         actions={
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              disabled={descargarPdf.isPending}
+              onClick={() => descargarPdf.mutate({ id: facturaId, numero: factura.numero })}
+            >
+              {descargarPdf.isPending ? <Loader2 className="size-4 animate-spin" /> : <FileDown className="size-4" />}
+              Descargar PDF
+            </Button>
             {puede(PERMISOS.FACTURA_ANULAR) && factura.estado === EstadoFactura.EMITIDA && (
               <Button
                 variant="outline"

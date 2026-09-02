@@ -35,7 +35,11 @@ export function RutaClientesDialog({ ruta }: RutaClientesDialogProps) {
         }`,
     },
     { accessorKey: "nombre", header: "Nombre" },
-    { accessorKey: "telefono", header: "Telefono", cell: ({ row }) => row.original.telefono ?? "-" },
+    {
+      accessorKey: "telefonos",
+      header: "Telefono",
+      cell: ({ row }) => (row.original.telefonos.length > 0 ? row.original.telefonos.join(", ") : "-"),
+    },
     {
       accessorKey: "activo",
       header: "Estado",

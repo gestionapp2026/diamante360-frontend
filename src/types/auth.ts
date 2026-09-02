@@ -47,6 +47,7 @@ export interface CrearUsuarioRequest {
 }
 
 export interface ActualizarUsuarioRequest {
+  username: string;
   nombreCompleto: string;
   rolId: number;
 }

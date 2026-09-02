@@ -31,7 +31,8 @@ export interface CrearProductoRequest {
   tipoVenta: TipoVenta;
   unidadMedida: UnidadMedida;
   precioCompra: number;
-  precioVenta: number;
+  /** Opcional al crear: si no se envia, el backend lo deja en 0 y se define despues editando el producto. */
+  precioVenta?: number;
   stockInicial: number;
   stockMinimo: number;
 }

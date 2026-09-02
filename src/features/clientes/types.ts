@@ -8,7 +8,7 @@ export interface ClienteResponse {
   /** Null cuando el usuario autenticado no tiene el permiso CLIENTE_VER_DOCUMENTO. */
   numeroDocumento: string | null;
   nombre: string;
-  telefono: string | null;
+  telefonos: string[];
   email: string | null;
   direccion: string | null;
   rutaId: number | null;
@@ -57,7 +57,7 @@ export interface CrearClienteRequest {
   tipoDocumento: TipoDocumentoCliente;
   numeroDocumento: string;
   nombre: string;
-  telefono?: string | null;
+  telefonos?: string[] | null;
   email?: string | null;
   direccion?: string | null;
   rutaId?: number | null;
@@ -65,7 +65,7 @@ export interface CrearClienteRequest {
 
 export interface ActualizarClienteRequest {
   nombre: string;
-  telefono?: string | null;
+  telefonos?: string[] | null;
   email?: string | null;
   direccion?: string | null;
 }

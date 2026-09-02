@@ -20,6 +20,9 @@ export const facturaApi = {
 
   obtener: (id: number) => apiClient.get<FacturaResponse>(`/facturas/${id}`).then((r) => r.data),
 
+  obtenerPdf: (id: number) =>
+    apiClient.get<Blob>(`/facturas/${id}/pdf`, { responseType: "blob" }).then((r) => r.data),
+
   crear: (payload: CrearFacturaRequest) =>
     apiClient.post<FacturaResponse>("/facturas", payload).then((r) => r.data),
 

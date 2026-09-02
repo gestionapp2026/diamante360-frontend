@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { Search } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ export function ClientesListPage() {
   const [texto, setTexto] = useState("");
   const [debouncedTexto, setDebouncedTexto] = useState("");
   const [page, setPage] = useState(0);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -29,23 +30,36 @@ export function ClientesListPage() {
     return () => clearTimeout(timeout);
   }, [texto]);
 
-  const { data, isLoading } = useClientes({ texto: debouncedTexto, page, size: 10 });
+  const sort = sorting[0] ? `${sorting[0].id},${sorting[0].desc ? "desc" : "asc"}` : undefined;
+  const { data, isLoading } = useClientes({ texto: debouncedTexto, page, size: 10, sort });
 
   const columns: ColumnDef<ClienteResponse, any>[] = useMemo(() => [
     {
       accessorKey: "numeroDocumento",
       header: "Documento",
+      enableSorting: true,
       cell: ({ row }) =>
         `${row.original.tipoDocumento} ${
           puede(PERMISOS.CLIENTE_VER_DOCUMENTO) ? (row.original.numeroDocumento ?? "-") : "(oculto)"
         }`,
     },
-    { accessorKey: "nombre", header: "Nombre" },
-    { accessorKey: "telefono", header: "Telefono", cell: ({ row }) => row.original.telefono ?? "-" },
-    { accessorKey: "rutaNombre", header: "Ruta", cell: ({ row }) => row.original.rutaNombre ?? "Sin ruta" },
+    { accessorKey: "nombre", header: "Nombre", enableSorting: true },
+    {
+      accessorKey: "telefonos",
+      header: "Telefono",
+      enableSorting: false,
+      cell: ({ row }) => (row.original.telefonos.length > 0 ? row.original.telefonos.join(", ") : "-"),
+    },
+    {
+      accessorKey: "rutaNombre",
+      header: "Ruta",
+      enableSorting: false,
+      cell: ({ row }) => row.original.rutaNombre ?? "Sin ruta",
+    },
     {
       accessorKey: "activo",
       header: "Estado",
+      enableSorting: false,
       cell: ({ row }) => (
         <StatusBadge label={row.original.activo ? "Activo" : "Inactivo"} tone={activoTone(row.original.activo)} />
       ),
@@ -77,6 +91,11 @@ export function ClientesListPage() {
         page={data}
         onPageChange={setPage}
         onRowClick={(row) => navigate(`/clientes/${row.id}`)}
+        sorting={sorting}
+        onSortingChange={(updater) => {
+          setSorting(updater);
+          setPage(0);
+        }}
         emptyTitle="Sin clientes"
         emptyDescription="No se encontraron clientes con los criterios de busqueda."
       />
