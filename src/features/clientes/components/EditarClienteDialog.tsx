@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Pencil } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +16,12 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useActualizarCliente } from "@/features/clientes/hooks/use-clientes";
-import { actualizarClienteSchema, type ActualizarClienteFormValues } from "@/features/clientes/schemas/cliente-schemas";
+import {
+  actualizarClienteSchema,
+  telefonosArrayToFormValues,
+  telefonosFormValuesToArray,
+  type ActualizarClienteFormValues,
+} from "@/features/clientes/schemas/cliente-schemas";
 import type { ClienteResponse } from "@/features/clientes/types";
 
 interface EditarClienteDialogProps {
@@ -31,17 +36,19 @@ export function EditarClienteDialog({ cliente }: EditarClienteDialogProps) {
     resolver: zodResolver(actualizarClienteSchema),
     defaultValues: {
       nombre: cliente.nombre,
-      telefono: cliente.telefono ?? "",
+      telefonos: telefonosArrayToFormValues(cliente.telefonos),
       email: cliente.email ?? "",
       direccion: cliente.direccion ?? "",
     },
   });
 
+  const telefonosArray = useFieldArray({ control: form.control, name: "telefonos" });
+
   useEffect(() => {
     if (open) {
       form.reset({
         nombre: cliente.nombre,
-        telefono: cliente.telefono ?? "",
+        telefonos: telefonosArrayToFormValues(cliente.telefonos),
         email: cliente.email ?? "",
         direccion: cliente.direccion ?? "",
       });
@@ -51,7 +58,7 @@ export function EditarClienteDialog({ cliente }: EditarClienteDialogProps) {
   async function onSubmit(values: ActualizarClienteFormValues) {
     await actualizarCliente.mutateAsync({
       nombre: values.nombre,
-      telefono: values.telefono || null,
+      telefonos: telefonosFormValuesToArray(values.telefonos),
       email: values.email || null,
       direccion: values.direccion || null,
     });
@@ -86,34 +93,58 @@ export function EditarClienteDialog({ cliente }: EditarClienteDialogProps) {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="telefono"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Telefono</FormLabel>
-                    <FormControl>
-                      <Input placeholder="3001234567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="cliente@correo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-2">
+              <FormLabel>Telefonos</FormLabel>
+              {telefonosArray.fields.map((field, index) => (
+                <div key={field.id} className="flex items-center gap-2">
+                  <FormField
+                    control={form.control}
+                    name={`telefonos.${index}.valor`}
+                    render={({ field: telefonoField }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                          <Input placeholder="3001234567" {...telefonoField} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 text-destructive hover:text-destructive"
+                    disabled={telefonosArray.fields.length === 1}
+                    onClick={() => telefonosArray.remove(index)}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={telefonosArray.fields.length >= 5}
+                onClick={() => telefonosArray.append({ valor: "" })}
+              >
+                <Plus className="size-4" />
+                Agregar telefono
+              </Button>
             </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="cliente@correo.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="direccion"

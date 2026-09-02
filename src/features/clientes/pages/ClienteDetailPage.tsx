@@ -119,8 +119,10 @@ function DatosTab({ clienteId }: { clienteId: number }) {
             <p className="text-sm font-medium">{cliente.nombre}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Telefono</p>
-            <p className="text-sm font-medium">{cliente.telefono ?? "-"}</p>
+            <p className="text-xs text-muted-foreground">Telefonos</p>
+            <p className="text-sm font-medium">
+              {cliente.telefonos.length > 0 ? cliente.telefonos.join(", ") : "-"}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Email</p>

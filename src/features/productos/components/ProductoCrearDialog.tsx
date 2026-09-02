@@ -18,11 +18,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCategorias } from "@/features/productos/hooks/use-categorias";
 import { useCrearProducto } from "@/features/productos/hooks/use-productos";
 import { crearProductoSchema, type CrearProductoFormValues } from "@/features/productos/schemas/producto-schemas";
+import type { ProductoResponse } from "@/features/productos/types";
 import { TipoVenta, UnidadMedida } from "@/types/enums";
 
 interface ProductoCrearDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Se invoca con el producto recien creado, ademas de la invalidacion normal de la lista. */
+  onCreated?: (producto: ProductoResponse) => void;
 }
 
 const DEFAULT_VALUES: CrearProductoFormValues = {
@@ -31,7 +34,6 @@ const DEFAULT_VALUES: CrearProductoFormValues = {
   tipoVenta: TipoVenta.UNIDAD,
   unidadMedida: UnidadMedida.UND,
   precioCompra: "",
-  precioVenta: "",
   stockInicial: "",
   stockMinimo: "",
 };
@@ -41,7 +43,7 @@ const UNIDADES_POR_TIPO_VENTA: Record<string, UnidadMedida[]> = {
   [TipoVenta.PESO_VARIABLE]: [UnidadMedida.KG, UnidadMedida.LB],
 };
 
-export function ProductoCrearDialog({ open, onOpenChange }: ProductoCrearDialogProps) {
+export function ProductoCrearDialog({ open, onOpenChange, onCreated }: ProductoCrearDialogProps) {
   const { data: categorias } = useCategorias();
   const crearProducto = useCrearProducto();
 
@@ -68,17 +70,17 @@ export function ProductoCrearDialog({ open, onOpenChange }: ProductoCrearDialogP
 
   async function onSubmit(values: CrearProductoFormValues) {
     try {
-      await crearProducto.mutateAsync({
+      const producto = await crearProducto.mutateAsync({
         nombre: values.nombre,
         categoriaId: Number(values.categoriaId),
         tipoVenta: values.tipoVenta as TipoVenta,
         unidadMedida: values.unidadMedida as UnidadMedida,
         precioCompra: Number(values.precioCompra),
-        precioVenta: Number(values.precioVenta),
         stockInicial: Number(values.stockInicial),
         stockMinimo: Number(values.stockMinimo),
       });
       onOpenChange(false);
+      onCreated?.(producto);
     } catch {
       // el error ya se notifica via toast en el hook
     }
@@ -183,35 +185,22 @@ export function ProductoCrearDialog({ open, onOpenChange }: ProductoCrearDialogP
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="precioCompra"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio de compra</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" min="0" placeholder="0" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="precioVenta"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Precio de venta</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" min="0" placeholder="0" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="precioCompra"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Precio de compra</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" min="0" placeholder="0" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <p className="text-xs text-muted-foreground">
+              El precio de venta se define despues, editando el producto una vez creado.
+            </p>
 
             <div className="grid grid-cols-2 gap-4">
               <FormField

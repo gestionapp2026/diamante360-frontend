@@ -17,10 +17,6 @@ export const crearProductoSchema = z.object({
     .string()
     .min(1, "El precio de compra es obligatorio")
     .refine((v) => !Number.isNaN(Number(v)) && Number(v) >= 0, "El precio de compra no puede ser negativo"),
-  precioVenta: z
-    .string()
-    .min(1, "El precio de venta es obligatorio")
-    .refine((v) => !Number.isNaN(Number(v)) && Number(v) >= 0, "El precio de venta no puede ser negativo"),
   stockInicial: z
     .string()
     .min(1, "El stock inicial es obligatorio")

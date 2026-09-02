@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, Trash2, UserPlus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Combobox } from "@/components/common/Combobox";
 import { PageHeader } from "@/components/common/PageHeader";
+import { ClienteFormDialog } from "@/features/clientes/components/ClienteFormDialog";
 import { useClientes, usePreciosCliente } from "@/features/clientes/hooks/use-clientes";
 import { useCrearFactura } from "@/features/facturas/hooks/use-facturas";
 import { crearFacturaSchema, type CrearFacturaFormValues } from "@/features/facturas/schemas/factura-schemas";
+import { ProductoCrearDialog } from "@/features/productos/components/ProductoCrearDialog";
 import { useProductos } from "@/features/productos/hooks/use-productos";
 import { usePermiso } from "@/hooks/use-permiso";
 import { formatCurrency } from "@/lib/format";
@@ -39,6 +41,9 @@ export function NuevaFacturaPage() {
 
   const [clienteTexto, setClienteTexto] = useState("");
   const [debouncedClienteTexto, setDebouncedClienteTexto] = useState("");
+  // Indice de la linea de "detalles" para la que se esta creando un producto nuevo desde el dialogo
+  // embebido (null = dialogo cerrado). Al crearse, ese producto queda seleccionado en esa misma linea.
+  const [productoDialogParaIndice, setProductoDialogParaIndice] = useState<number | null>(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedClienteTexto(clienteTexto), 400);
@@ -183,17 +188,35 @@ export function NuevaFacturaPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Cliente</FormLabel>
-                        <FormControl>
-                          <Combobox
-                            options={clienteOptions}
-                            value={field.value || null}
-                            onChange={(value) => field.onChange(value ?? "")}
-                            onSearchChange={setClienteTexto}
-                            loading={clientesLoading}
-                            placeholder="Selecciona un cliente"
-                            emptyText="Sin clientes"
-                          />
-                        </FormControl>
+                        <div className="flex min-w-0 items-start gap-2">
+                          <div className="min-w-0 flex-1">
+                            <FormControl>
+                              <Combobox
+                                options={clienteOptions}
+                                value={field.value || null}
+                                onChange={(value) => field.onChange(value ?? "")}
+                                onSearchChange={setClienteTexto}
+                                loading={clientesLoading}
+                                placeholder="Selecciona un cliente"
+                                emptyText="Sin clientes"
+                              />
+                            </FormControl>
+                          </div>
+                          {puede(PERMISOS.CLIENTE_CREAR) && (
+                            <ClienteFormDialog
+                              trigger={
+                                <Button type="button" variant="outline" size="icon" className="shrink-0" title="Crear cliente nuevo">
+                                  <UserPlus className="size-4" />
+                                </Button>
+                              }
+                              onCreated={(cliente) => {
+                                setClienteTexto("");
+                                setDebouncedClienteTexto("");
+                                field.onChange(String(cliente.id));
+                              }}
+                            />
+                          )}
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -286,15 +309,31 @@ export function NuevaFacturaPage() {
                         render={({ field: productoField }) => (
                           <FormItem>
                             <FormLabel>Producto</FormLabel>
-                            <FormControl>
-                              <Combobox
-                                options={productoOptions}
-                                value={productoField.value || null}
-                                onChange={(value) => productoField.onChange(value ?? "")}
-                                placeholder="Selecciona un producto"
-                                emptyText="Sin productos"
-                              />
-                            </FormControl>
+                            <div className="flex min-w-0 items-start gap-2">
+                              <div className="min-w-0 flex-1">
+                                <FormControl>
+                                  <Combobox
+                                    options={productoOptions}
+                                    value={productoField.value || null}
+                                    onChange={(value) => productoField.onChange(value ?? "")}
+                                    placeholder="Selecciona un producto"
+                                    emptyText="Sin productos"
+                                  />
+                                </FormControl>
+                              </div>
+                              {puede(PERMISOS.PRODUCTO_CREAR) && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  className="shrink-0"
+                                  title="Crear producto nuevo"
+                                  onClick={() => setProductoDialogParaIndice(index)}
+                                >
+                                  <Plus className="size-4" />
+                                </Button>
+                              )}
+                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -378,6 +417,22 @@ export function NuevaFacturaPage() {
           </div>
         </form>
       </Form>
+
+      <ProductoCrearDialog
+        open={productoDialogParaIndice !== null}
+        onOpenChange={(open) => {
+          if (!open) setProductoDialogParaIndice(null);
+        }}
+        onCreated={(producto) => {
+          if (productoDialogParaIndice !== null) {
+            form.setValue(`detalles.${productoDialogParaIndice}.productoId`, String(producto.id), {
+              shouldValidate: true,
+              shouldDirty: true,
+            });
+          }
+          setProductoDialogParaIndice(null);
+        }}
+      />
     </div>
   );
 }

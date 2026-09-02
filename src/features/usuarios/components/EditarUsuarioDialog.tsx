@@ -36,6 +36,7 @@ export function EditarUsuarioDialog({ usuario }: EditarUsuarioDialogProps) {
   const form = useForm<ActualizarUsuarioFormValues>({
     resolver: zodResolver(actualizarUsuarioSchema),
     defaultValues: {
+      username: usuario.username,
       nombreCompleto: usuario.nombreCompleto,
       rolId: String(usuario.rolId),
     },
@@ -44,6 +45,7 @@ export function EditarUsuarioDialog({ usuario }: EditarUsuarioDialogProps) {
   useEffect(() => {
     if (open) {
       form.reset({
+        username: usuario.username,
         nombreCompleto: usuario.nombreCompleto,
         rolId: String(usuario.rolId),
       });
@@ -52,6 +54,7 @@ export function EditarUsuarioDialog({ usuario }: EditarUsuarioDialogProps) {
 
   async function onSubmit(values: ActualizarUsuarioFormValues) {
     await actualizarUsuario.mutateAsync({
+      username: values.username,
       nombreCompleto: values.nombreCompleto,
       rolId: Number(values.rolId),
     });
@@ -68,13 +71,23 @@ export function EditarUsuarioDialog({ usuario }: EditarUsuarioDialogProps) {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Editar usuario</DialogTitle>
-          <DialogDescription>Actualiza el nombre completo y el rol del usuario.</DialogDescription>
+          <DialogDescription>Actualiza el nombre de usuario, el nombre completo y el rol.</DialogDescription>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">
-          Usuario: <span className="font-medium text-foreground">{usuario.username}</span>
-        </p>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre de usuario</FormLabel>
+                  <FormControl>
+                    <Input placeholder="jhon.perez" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="nombreCompleto"

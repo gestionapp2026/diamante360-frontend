@@ -76,3 +76,21 @@ export function useHistorialFactura(facturaId: number, params: PageQuery) {
     enabled: facturaId !== undefined,
   });
 }
+
+/** Descarga el PDF de la factura y le pide al navegador que lo abra/guarde con un nombre de archivo legible. */
+export function useDescargarFacturaPdf() {
+  return useMutation({
+    mutationFn: async ({ id, numero }: { id: number; numero: string }) => {
+      const blob = await facturaApi.obtenerPdf(id);
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = `factura-${numero}.pdf`;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      URL.revokeObjectURL(url);
+    },
+    onError: (error) => toast.error(getErrorMessage(error)),
+  });
+}

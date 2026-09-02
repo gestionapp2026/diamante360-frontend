@@ -20,6 +20,11 @@ export const crearUsuarioSchema = z.object({
 export type CrearUsuarioFormValues = z.infer<typeof crearUsuarioSchema>;
 
 export const actualizarUsuarioSchema = z.object({
+  username: z
+    .string()
+    .min(3, "El nombre de usuario debe tener minimo 3 caracteres")
+    .max(50, "El nombre de usuario debe tener maximo 50 caracteres")
+    .regex(/^[a-zA-Z0-9._-]+$/, "Solo letras, numeros, puntos, guiones y guion bajo"),
   nombreCompleto: z
     .string()
     .min(1, "El nombre completo es obligatorio")
